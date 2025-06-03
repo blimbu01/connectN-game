@@ -1,101 +1,63 @@
-#include <vector>
-#include "GridPosition.h"
+// Grid.cpp
+#include "Grid.h"
+#include <stdexcept>
 
-using namespace std;
+Grid::Grid(int rows, int columns) : rows(rows), columns(columns) {
+    initGrid();
+}
 
-class Grid {
-private:
-    int rows;
-    int columns;
-    vector<vector<GridPosition>> grid;
+void Grid::initGrid() {
+    grid = std::vector<std::vector<int>>(rows, std::vector<int>(columns, GridPosition::EMPTY));
+}
 
-public:
-    Grid(int rows, int columns) : rows(rows), columns(columns) {
-        initGrid();
+std::vector<std::vector<int>> Grid::getGrid() {
+    return grid;
+}
+
+int Grid::getColummnCount() {
+    return columns;
+}
+
+int Grid::placePiece(int column, GridPosition piece) {
+    if (column < 0 || column >= columns) throw "Invalid column";
+    if (piece == GridPosition::EMPTY) throw "Invalid piece";
+
+    for (int row = rows-1; row >= 0; row--) {
+        if (grid[row][column] == GridPosition::EMPTY) {
+            grid[row][column] = piece;
+            return row;
+        }
+    }
+    return -1;
+}
+
+bool Grid::checkWin(int connectN, int row, int col, GridPosition piece) {
+    int count = 0;
+    for (int c = 0; c < columns; c++) {
+        count = (grid[row][c] == piece) ? count + 1 : 0;
+        if (count == connectN) return true;
     }
 
-    void initGrid() {
-        grid = vector<vector<GridPosition>>(rows, vector<GridPosition>(columns, GridPosition::EMPTY));
+    count = 0;
+    for (int r = 0; r < rows; r++) {
+        count = (grid[r][col] == piece) ? count + 1 : 0;
+        if (count == connectN) return true;
     }
 
-    const vector<vector<GridPosition>>& getGrid() const {
-        return grid;
+    count = 0;
+    for (int r = 0; r < rows; r++) {
+        int c = row + col - r;
+        if (c >= 0 && c < columns && grid[r][c] == piece) count++;
+        else count = 0;
+        if (count == connectN) return true;
     }
 
-    int getColumnCount() const {
-        return columns;
+    count = 0;
+    for (int r = 0; r < rows; r++) {
+        int c = col - row + r;
+        if (c >= 0 && c < columns && grid[r][c] == piece) count++;
+        else count = 0;
+        if (count == connectN) return true;
     }
-
-    int placePiece(int column, GridPosition piece) {
-        if (column < 0 || column >= columns) {
-            throw std::runtime_error("Invalid column");
-        }q
-        if (piece == GridPosition::EMPTY) {
-            throw std::runtime_error("Invalid piece");
-        }
-        for (int row = rows - 1; row >= 0; row--) {
-            if (grid[row][column] == GridPosition::EMPTY) {
-                grid[row][column] = piece;
-                return row;
-            }
-        }
-        return -1;
-    }
-
-    bool checkWin(int connectN, int row, int col, GridPosition piece) {
-        // Check horizontal
-        int count = 0;
-        for (int c = 0; c < this->columns; c++) {
-            if (this->grid[row][c] == piece) {
-                count++;
-            } else {
-                count = 0;
-            }
-            if (count == connectN) {
-                return true;
-            }
-        }
-
-        // Check vertical
-        count = 0;
-        for (int r = 0; r < this->rows; r++) {
-            if (this->grid[r][col] == piece) {
-                count++;
-            } else {
-                count = 0;
-            }
-            if (count == connectN) {
-                return true;
-            }
-        }
-
-        // Check diagonal
-        count = 0;
-        for (int r = 0; r < this->rows; r++) {
-            int c = row + col - r; // row + col = r + c, for a diagonal
-            if (c >= 0 && c < this->columns && this->grid[r][c] == piece) {
-                count++;
-            } else {
-                count = 0;
-            }
-            if (count == connectN) {
-                return true;
-            }
-        }
-
-        // Check anti-diagonal
-        count = 0;
-        for (int r = 0; r < this->rows; r++) {
-            int c = col - row + r; // row - col = r - c, for an anti-diagonal
-            if (c >= 0 && c < this->columns && this->grid[r][c] == piece) {
-                count++;
-            } else {
-                count = 0;
-            }
-            if (count == connectN) {
-                return true;
-            }
-        }
-        return false;
-    }
-};
+    return false;
+}
